@@ -1,0 +1,5 @@
+[toolchain]
+# channel = "nightly"
+channel = "stable"
+components = [ "rustfmt", "rustc-dev" ]
+# targets = [ "wasm32-unknown-unknown", "thumbv2-none-eabi" ]

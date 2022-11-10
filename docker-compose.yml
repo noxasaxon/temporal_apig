@@ -1,0 +1,19 @@
+version: "3.5"
+
+services:
+  temporal_apig:
+    build:
+      dockerfile: "Dockerfile"
+
+    ## interactive mode for debugging
+    # stdin_open: true # docker run -i
+    # tty: true        # docker run -t
+    # entrypoint: "/bin/sh"
+
+    env_file: .env
+    environment:
+      # overwrite localhost because of dockercompose
+      TEMPORAL_SERVICE_HOST: host.docker.internal
+
+      # Deployment Secrets
+      # SECRET_MY_SECRET_NAME: secrets/my_secret_name

@@ -1,0 +1,7 @@
+
+[workspace]
+members = [
+    "crates/*"
+]
+
+default-members = ["crates/apig_server"]
