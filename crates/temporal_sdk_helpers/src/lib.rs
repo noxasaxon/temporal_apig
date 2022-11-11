@@ -21,7 +21,7 @@ use temporal_sdk_core_protos::{
 };
 use uuid::Uuid;
 
-pub const DEFAULT_NAMESPACE: &str = "security-engineering";
+pub const DEFAULT_NAMESPACE: &str = "test-namespace";
 pub type TemporalSDKClient = RetryClient<ConfiguredClient<TemporalServiceClientWithMetrics>>;
 
 pub static TEMPORAL_HOST_PORT_PAIR: OnceCell<(String, String)> = OnceCell::new();
@@ -34,7 +34,7 @@ pub async fn build_temporal_client_without_namespace() -> Result<TemporalSDKClie
     let temporal_url = url::Url::parse(&format!("http://{host}:{port}"))?;
 
     let client_options = temporal_client::ClientOptionsBuilder::default()
-        .identity("seceng_rust_apig".into())
+        .identity("custom_rust_apig".into())
         .client_name("")
         .client_version("")
         .target_url(temporal_url.clone())
@@ -193,20 +193,20 @@ pub async fn query_temporal(query_info: QueryTemporal) -> Result<QueryWorkflowRe
 
 // {
 //     "type" : "Execute",
-//     "namespace" : "security-engineering",
+//     "namespace" : "test-namespace",
 //     "task_queue": "template-taskqueue",
 //     "workflow_id" : "1",
 //     "workflow_type" : "GreetingWorkflow",
 //     "args":[{
 //         "name" : "saxon",
-//         "team" : "seceng"
+//         "team" : "test-team"
 //     }]
 // }
 
 // {
 //     "type": "Signal",
-//     "namespace": "security-engineering",
-//     "task_queue": "security-eng-task-queue-rs",
+//     "namespace": "test-namespace",
+//     "task_queue": "test-task-queue",
 //     "workflow_id": "some-super-long-uuid-string",
 //     "run_id": "some-equally-long-uuid-string",
 //     "signal_name": "signal_name_thats_defined_in_workflow",
