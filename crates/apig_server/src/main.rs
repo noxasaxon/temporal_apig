@@ -49,7 +49,7 @@ async fn main() {
     let config = init_config_from_env_and_file().expect("unable to build app config");
 
     TEMPORAL_HOST_PORT_PAIR
-        .set((config.TEMPORAL_SERVICE_HOST, config.TEMPORAL_SERVICE_PORT))
+        .set((config.temporal_service_host, config.temporal_service_port))
         .expect("shouldn't fail");
 
     // TODO: add temporal cluster connection check before starting the webserver

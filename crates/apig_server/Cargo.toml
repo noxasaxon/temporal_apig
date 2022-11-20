@@ -13,7 +13,7 @@ hyper = "0.14"
 mime = "0.3"
 
 [dependencies]
-temporal_sdk_helpers = {path = "../temporal_sdk_helpers"}
+temporal-sdk-helpers = {path = "../temporal-sdk-helpers"}
 
 # HTTP Server
 axum = {git = "https://github.com/tokio-rs/axum", features = ["macros"], rev = "7caa4a3"}

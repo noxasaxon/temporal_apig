@@ -3,7 +3,7 @@ version: "3.5"
 services:
   temporal_apig:
     build:
-      dockerfile: "Dockerfile"
+      dockerfile: "Dockerfile.apig"
 
     ## interactive mode for debugging
     # stdin_open: true # docker run -i

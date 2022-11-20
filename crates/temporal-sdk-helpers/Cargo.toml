@@ -1,5 +1,5 @@
 [package]
-name = "temporal_sdk_helpers"
+name = "temporal-sdk-helpers"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.63"
@@ -21,4 +21,4 @@ strum = {version = "0.24", features = ["derive"]}
 
 once_cell = "1.16"
 
-temporal-json = { git = "https://github.com/noxasaxon/temporal-json", rev = "cc8c288" }
+temporal-json = { path="../temporal-json"}

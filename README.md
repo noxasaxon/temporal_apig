@@ -1,19 +1,9 @@
-# temporal_apig
+# Temporal API Gateway
 
-## Routes
+## [API Gateway Webserver](./crates/apig_server/README.md)
 
-**All routes are versioned**
+## [Temporal Rust SDK Helpers](./crates/temporal-sdk-helpers/README.md)
 
-### /api/:version/temporal subroutes
-- `/`  JSON to Temporal SDK call (Execute, Signal, Query)
-- `/encode` JSON to encoded string
-- `/decode` encoded string to JSON
+## [JSON Models & String Encoder](./crates/temporal-json/README.md)
 
-### /api/:version/slack subroutes
-- `/interaction` Parse Slack interaction events, find the encoded string and trigger Temporal
-
-
-## Slack Interaction events
-All Slack interaction events have a `callback_id` field except for `block_actions` events, in which case the `action_id` is used. The encoder is used to embed the running workflow's info into the `callback_id` so that it can be routed back to the same workflow.
-
-## Encoder
+### [NodeJS Bindings to the Encoder](./crates/temporal-json-node/README.md)
