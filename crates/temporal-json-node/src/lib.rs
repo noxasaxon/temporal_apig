@@ -1,3 +1,6 @@
+//! Node-js bindings for the `temporal-json` crate
+//! Provides an encoder & decoder interface for the teamporal api gateway
+
 #![deny(clippy::all)]
 
 #[macro_use]

@@ -17,7 +17,10 @@ yarn test
 ### Publish
 ```shell
 npm version patch
-git tag -a <version> -m "<tag_message>"
+git tag -a <version> -m "<version>"
 git push --follow-tags
 ```
-then commit and push
+
+**Notes**
+- Publish will only occur if the commit message is just the version number ex.  1.0.0
+- Changes to some files like `*.md` won't trigger the CI pipeline.
