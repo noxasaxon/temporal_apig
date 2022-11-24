@@ -1,5 +1,5 @@
 {
-  "name": "@noxasaxon/temporal_json",
+  "name": "@saxorg/temporal_json",
   "version": "0.0.0",
   "main": "index.js",
   "types": "index.d.ts",
@@ -29,8 +29,8 @@
   },
   "packageManager": "yarn@3.2.4",
   "optionalDependencies": {
-    "@noxasaxon/temporal_json-win32-x64-msvc": "0.0.0",
-    "@noxasaxon/temporal_json-darwin-x64": "0.0.0",
-    "@noxasaxon/temporal_json-linux-x64-gnu": "0.0.0"
+    "@saxorg/temporal_json-win32-x64-msvc": "0.0.0",
+    "@saxorg/temporal_json-darwin-x64": "0.0.0",
+    "@saxorg/temporal_json-linux-x64-gnu": "0.0.0"
   }
 }
