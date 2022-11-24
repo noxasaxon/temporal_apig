@@ -1,6 +1,8 @@
 # temporal-json-node
+[![npm-ci](https://github.com/noxasaxon/temporal_apig/actions/workflows/npm-ci.yml/badge.svg)](https://github.com/noxasaxon/temporal_apig/actions/workflows/npm-ci.yml)
 
 NodeJS bindings to the [Temporal API Gateway JSON Encoder](../temporal-json/README.md)
+
 
 ## Commands
 

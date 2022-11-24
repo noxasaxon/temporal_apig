@@ -7,5 +7,6 @@
 ## [JSON Models & String Encoder](./crates/temporal-json/README.md)
 
 ### [NodeJS Bindings to the Encoder](./crates/temporal-json-node/README.md)
+[![npm-ci](https://github.com/noxasaxon/temporal_apig/actions/workflows/npm-ci.yml/badge.svg)](https://github.com/noxasaxon/temporal_apig/actions/workflows/npm-ci.yml)
 
 publishes to npm
