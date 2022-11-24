@@ -27,5 +27,10 @@
     "test": "ava",
     "version": "napi version"
   },
-  "packageManager": "yarn@3.2.4"
+  "packageManager": "yarn@3.2.4",
+  "optionalDependencies": {
+    "@noxasaxon/temporal_json-win32-x64-msvc": "0.0.0",
+    "@noxasaxon/temporal_json-darwin-x64": "0.0.0",
+    "@noxasaxon/temporal_json-linux-x64-gnu": "0.0.0"
+  }
 }

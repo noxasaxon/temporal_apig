@@ -236,8 +236,9 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { encodeSignalNoArgsDefault, encodeSignalNoArgsWithVersion, encodeDefaultFromJsonString, decodeToJsonString } = nativeBinding
+const { Encoder, encodeSignalNoArgsDefault, encodeSignalNoArgsWithVersion, encodeDefaultFromJsonString, decodeToJsonString } = nativeBinding
 
+module.exports.Encoder = Encoder
 module.exports.encodeSignalNoArgsDefault = encodeSignalNoArgsDefault
 module.exports.encodeSignalNoArgsWithVersion = encodeSignalNoArgsWithVersion
 module.exports.encodeDefaultFromJsonString = encodeDefaultFromJsonString

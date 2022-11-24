@@ -76,7 +76,7 @@ jobs:
       - name: Cache NPM dependencies
         uses: actions/cache@v3
         with:
-          path: .yarn/cache
+          path: crates/temporal-json-node/.yarn/cache
           key: npm-cache-build-${{ matrix.settings.target }}-node@16
       - name: Setup toolchain
         run: ${{ matrix.settings.setup }}
@@ -112,7 +112,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: ${{ env.APP_NAME }}.*.node
+          path: crates/temporal-json-node/${{ env.APP_NAME }}.*.node
           if-no-files-found: error
   test-macOS-windows-binding:
     name: Test bindings on ${{ matrix.settings.target }} - node@${{ matrix.node }}
@@ -141,7 +141,7 @@ jobs:
       - name: Cache NPM dependencies
         uses: actions/cache@v3
         with:
-          path: .yarn/cache
+          path: crates/temporal-json-node/.yarn/cache
           key: npm-cache-test-${{ matrix.settings.target }}-${{ matrix.node }}-${{ hashFiles('yarn.lock') }}
       - name: Install dependencies
         run: yarn install
@@ -149,7 +149,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: .
+          path: ./crates/temporal-json-node
       - name: List packages
         run: ls -R .
         shell: bash
@@ -179,7 +179,7 @@ jobs:
       - name: Cache NPM dependencies
         uses: actions/cache@v3
         with:
-          path: .yarn/cache
+          path: ./crates/temporal-json-node.yarn/cache
           key: npm-cache-test-linux-x64-gnu-${{ matrix.node }}
       - name: Install dependencies
         run: yarn install
@@ -187,7 +187,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: bindings-x86_64-unknown-linux-gnu
-          path: .
+          path: ./crates/temporal-json-node
       - name: List packages
         run: ls -R .
         shell: bash
@@ -211,14 +211,14 @@ jobs:
       - name: Cache NPM dependencies
         uses: actions/cache@v3
         with:
-          path: .yarn/cache
+          path: ./crates/temporal-json-node.yarn/cache
           key: npm-cache-ubuntu-latest-publish
       - name: Install dependencies
         run: yarn install
       - name: Download all artifacts
         uses: actions/download-artifact@v3
         with:
-          path: artifacts
+          path: crates/temporal-json-node/artifacts
       - name: Move artifacts
         run: yarn artifacts
       - name: List packages
