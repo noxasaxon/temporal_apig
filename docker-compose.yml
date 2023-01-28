@@ -10,7 +10,9 @@ services:
     # tty: true        # docker run -t
     # entrypoint: "/bin/sh"
 
-    env_file: .env
+    env_file: .default.env
+    ports:
+      - 3000:3000
     environment:
       # overwrite localhost because of dockercompose
       TEMPORAL_SERVICE_HOST: host.docker.internal

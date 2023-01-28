@@ -2,7 +2,7 @@ mod config;
 mod slack;
 mod versions;
 
-use crate::config::init_config_from_env_and_file;
+use crate::config::{init_config_from_env_and_file, Environments};
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
@@ -18,30 +18,37 @@ use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use versions::ApiVersion;
 
-fn create_router() -> Router {
-    // /api/:version/temporal
-    let temporal_router = Router::new()
-        .route("/", post(temporal_interaction_handler))
-        .route("/encode", post(temporal_encoder))
-        .route("/decode", post(temporal_decoder));
-
+fn create_router(environment: Environments) -> Router {
     // keep slack routes separate so we can add Slack Verification layer, shared client, etc
     // /api/:version/slack
-    let slack_router = Router::new().route(
-        "/interaction",
-        post(axum_apig_handler_slack_interactions_api),
-    );
+    let slack_router = Router::new()
+        .route(
+            "/interaction",
+            post(axum_apig_handler_slack_interactions_api),
+        )
+        .layer(TraceLayer::new_for_http());
 
     // /api/:version
     let versioned_api_router = Router::new()
         .route("/", get(version_confidence_check))
-        .nest("/temporal", temporal_router)
         .nest("/slack", slack_router);
 
-    // nest
-    Router::new()
-        .nest("/api/:version", versioned_api_router)
-        .layer(TraceLayer::new_for_http())
+    // disable temporal routes in prod/stage until auth is set up
+    let versioned_api_router = match environment {
+        Environments::stage | Environments::prod => versioned_api_router,
+        _ => {
+            // /api/:version/temporal
+            let temporal_router = Router::new()
+                .route("/", post(temporal_interaction_handler))
+                .route("/encode", post(temporal_encoder))
+                .route("/decode", post(temporal_decoder))
+                .layer(TraceLayer::new_for_http());
+
+            versioned_api_router.nest("/temporal", temporal_router)
+        }
+    };
+
+    Router::new().nest("/api/:version", versioned_api_router)
 }
 
 #[tokio::main]
@@ -57,9 +64,13 @@ async fn main() {
     init_tracing();
 
     // build our application with versioned routes
-    let app = create_router();
+    let app = create_router(config.environment);
+
     // run it
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from((
+        [0, 0, 0, 0],
+        config.apig_port.parse().expect("not a valid port"),
+    ));
     tracing::debug!("listening on {}", addr);
 
     if let Err(err) = axum::Server::bind(&addr)
@@ -86,7 +97,6 @@ async fn temporal_encoder(
     match api_version {
         ApiVersion::V1 => {
             let encoded_string = Encoder::default().encode(payload);
-
             Ok((StatusCode::CREATED, encoded_string))
         }
     }
@@ -126,15 +136,16 @@ async fn temporal_interaction_handler(
 fn init_tracing() {
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
-            std::env::var("RUST_LOG").unwrap_or_else(|_| 
-                // "apig_server=debug".into()
-                "apig_server=trace,tower_http=trace,temporal_sdk_helpers=trace".into()),
+            std::env::var("RUST_LOG").unwrap_or_else(|_| {
+                "apig_server=trace,tower_http=trace,temporal_sdk_helpers=trace".into()
+            }),
         ))
         .with(tracing_subscriber::fmt::layer())
         .init();
 }
 
 // Make our own error that wraps `anyhow::Error`.
+#[derive(Debug)]
 pub struct AppError(anyhow::Error);
 
 // Tell axum how to convert `AppError` into a response.
@@ -178,7 +189,7 @@ mod tests {
         assert_statuscode: StatusCode,
         body_is_json: bool,
     ) -> Bytes {
-        let app = create_router().into_service();
+        let app = create_router(Environments::local).into_service();
 
         let mut request = Request::builder().uri(uri).method(method);
         if body_is_json {
@@ -283,7 +294,7 @@ mod tests {
 
     #[tokio::test]
     async fn not_found() {
-        let app = create_router().into_service();
+        let app = create_router(Environments::local).into_service();
 
         let response = app
             .oneshot(
