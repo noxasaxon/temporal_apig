@@ -7,3 +7,11 @@ xtask = "run --package xtask --"
 
 #[target.aarch64-unknown-linux-musl]
 #linker = "aarch64-linux-musl-gcc"  
+
+
+## Recommended for napi-rs Node
+# [target.x86_64-apple-darwin]
+# rustflags = ["-C", "link-args=-Wl,-undefined,dynamic_lookup"]
+
+# [target.aarch64-apple-darwin]
+# rustflags = ["-C", "link-args=-Wl,-undefined,dynamic_lookup"]

@@ -1,15 +1,15 @@
 {
-  "name": "@saxorg/temporal_json-darwin-x64",
+  "name": "@saxorg/temporal_json-darwin-arm64",
   "version": "0.0.0",
   "os": [
     "darwin"
   ],
   "cpu": [
-    "x64"
+    "arm64"
   ],
-  "main": "temporal_json.darwin-x64.node",
+  "main": "temporal_json.darwin-arm64.node",
   "files": [
-    "temporal_json.darwin-x64.node"
+    "temporal_json.darwin-arm64.node"
   ],
   "license": "MIT",
   "engines": {

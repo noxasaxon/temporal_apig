@@ -17,7 +17,7 @@ ARG CARGO_INCREMENTAL=0
 
 COPY . .
 
-RUN USER=root cargo build --bin apig_server --release
+RUN USER=root cargo build --manifest-path crates/apig_server/Cargo.toml --release
 
 
 # From this line onwards, we're in a new image, which will be the image used in production
@@ -29,6 +29,8 @@ RUN addgroup appgroup && adduser appuser && adduser appuser appgroup
 # Copy over the build artifact from the previous step
 WORKDIR /home/appuser
 COPY --from=app_builder ./app/target/release/apig_server .
+COPY --from=app_builder ./app/.default.env .
+
 RUN chown -R appuser: ./apig_server
 
 # Tell docker that all future commands should run as appuser

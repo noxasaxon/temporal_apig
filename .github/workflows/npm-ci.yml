@@ -55,6 +55,7 @@ jobs:
           check-latest: true
           cache: yarn
           cache-dependency-path: crates/temporal-json-node/yarn.lock
+      
       - name: Install
         uses: actions-rs/toolchain@v1
         if: ${{ !matrix.settings.docker }}
@@ -63,6 +64,7 @@ jobs:
           override: true
           toolchain: stable
           target: ${{ matrix.settings.target }}
+      
       - name: Cache cargo
         uses: actions/cache@v3
         with:
@@ -73,21 +75,26 @@ jobs:
             .cargo-cache
             target/
           key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}
+      
       - name: Cache NPM dependencies
         uses: actions/cache@v3
         with:
           path: crates/temporal-json-node/.yarn/cache
           key: npm-cache-build-${{ matrix.settings.target }}-node@16
+      
       - name: Setup toolchain
         run: ${{ matrix.settings.setup }}
         if: ${{ matrix.settings.setup }}
         shell: bash
+      
       - name: Setup node x86
         if: matrix.settings.target == 'i686-pc-windows-msvc'
         run: yarn config set supportedArchitectures.cpu "ia32"
         shell: bash
+      
       - name: Install dependencies
         run: yarn install
+      
       - name: Setup node x86
         uses: actions/setup-node@v3
         if: matrix.settings.target == 'i686-pc-windows-msvc'
@@ -97,6 +104,7 @@ jobs:
           cache: yarn
           cache-dependency-path: crates/temporal-json-node/yarn.lock
           architecture: x86
+      
       - name: Build in docker
         uses: addnab/docker-run-action@v3
         if: ${{ matrix.settings.docker }}
@@ -104,16 +112,19 @@ jobs:
           image: ${{ matrix.settings.docker }}
           options: '--user 0:0 -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index -v ${{ github.workspace }}:/build -w /build/crates/temporal-json-node'
           run: ${{ matrix.settings.build }}
+      
       - name: Build
         run: ${{ matrix.settings.build }}
         if: ${{ !matrix.settings.docker }}
         shell: bash
+      
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: bindings-${{ matrix.settings.target }}
           path: crates/temporal-json-node/${{ env.APP_NAME }}.*.node
           if-no-files-found: error
+  
   test-macOS-windows-binding:
     name: Test bindings on ${{ matrix.settings.target }} - node@${{ matrix.node }}
     needs:
@@ -155,6 +166,7 @@ jobs:
         shell: bash
       - name: Test bindings
         run: yarn test
+  
   test-linux-x64-gnu-binding:
     name: Test bindings on Linux-x64-gnu - node@${{ matrix.node }}
     needs:
@@ -193,6 +205,7 @@ jobs:
         shell: bash
       - name: Test bindings
         run: docker run --rm -v $(pwd):/build -w /build/crates/temporal-json-node node:${{ matrix.node }}-slim yarn test
+  
   publish:
     name: Publish
     runs-on: ubuntu-latest
@@ -208,22 +221,28 @@ jobs:
           check-latest: true
           cache: yarn
           cache-dependency-path: crates/temporal-json-node/yarn.lock
+      
       - name: Cache NPM dependencies
         uses: actions/cache@v3
         with:
           path: ./crates/temporal-json-node.yarn/cache
           key: npm-cache-ubuntu-latest-publish
+      
       - name: Install dependencies
         run: yarn install
+
       - name: Download all artifacts
         uses: actions/download-artifact@v3
         with:
           path: crates/temporal-json-node/artifacts
+      
       - name: Move artifacts
         run: yarn artifacts
+
       - name: List packages
         run: ls -R ./npm
         shell: bash
+      
       - name: Publish
         run: |
           if git log -1 --pretty=%B | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+$";
