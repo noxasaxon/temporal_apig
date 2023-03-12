@@ -30,7 +30,8 @@
     "artifacts": "napi artifacts",
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform",
-    "unsafe-publish": "napi prepublish -t npm",
+    "prepublishOnly": "napi prepublish -t npm",
+    "pretest": "napi build --platform",
     "test": "ava",
     "version": "napi version"
   },
