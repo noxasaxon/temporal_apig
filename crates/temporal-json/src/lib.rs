@@ -142,8 +142,6 @@ pub const ENCODER_HELP_MSG: &str =
 
 #[derive(EnumIter, EnumString, Display, PartialEq, Eq, Hash, Debug, Clone)]
 #[cfg_attr(feature = "js", napi)]
-// #[cfg_attr(not(feature = "js"), derive(Clone))]
-// #[cfg_attr(all(feature = "python", not(feature = "js")), derive(Clone))]
 #[cfg_attr(feature = "python", pyo3::pyclass)]
 pub enum Encoder {
     A,

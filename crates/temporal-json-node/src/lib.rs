@@ -3,9 +3,6 @@
 
 #![deny(clippy::all)]
 
-// #[macro_use]
-// extern crate napi_derive;
-
 pub mod encoder {
   use napi::Status;
   use napi_derive::napi;
