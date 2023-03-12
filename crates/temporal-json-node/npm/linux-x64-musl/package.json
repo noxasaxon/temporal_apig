@@ -1,5 +1,5 @@
 {
-  "name": "@saxorg/temporal_json-linux-x64-gnu",
+  "name": "@saxorg/temporal_json-linux-x64-musl",
   "version": "0.0.0",
   "os": [
     "linux"
@@ -7,15 +7,15 @@
   "cpu": [
     "x64"
   ],
-  "main": "temporal_json.linux-x64-gnu.node",
+  "main": "temporal_json.linux-x64-musl.node",
   "files": [
-    "temporal_json.linux-x64-gnu.node"
+    "temporal_json.linux-x64-musl.node"
   ],
   "license": "MIT",
   "engines": {
     "node": ">= 10"
   },
   "libc": [
-    "glibc"
+    "musl"
   ]
 }

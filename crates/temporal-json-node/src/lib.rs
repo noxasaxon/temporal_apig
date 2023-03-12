@@ -1,13 +1,11 @@
 //! Node-js bindings for the `temporal-json` crate
-//! Provides an encoder & decoder interface for the teamporal api gateway
+//! Provides an encoder & decoder interface for the temporal api gateway
 
 #![deny(clippy::all)]
 
-#[macro_use]
-extern crate napi_derive;
-
 pub mod encoder {
   use napi::Status;
+  use napi_derive::napi;
   use temporal_json::TemporalInteraction;
   pub use temporal_json::{Encoder, SignalTemporal};
 
@@ -42,7 +40,7 @@ pub mod encoder {
   ///
   /// Example: use this string as the `callback_id` for a slack interaction, and when
   /// the Temporal API Gateway receives the event it can decode the string and route the event to your workflow.
-  fn encode_signal_no_args_default(signal: TemporalSignalWithoutInput) -> String {
+  pub fn encode_signal_no_args_default(signal: TemporalSignalWithoutInput) -> String {
     Encoder::default().encode(TemporalInteraction::Signal(signal.into()))
   }
 
@@ -51,7 +49,7 @@ pub mod encoder {
   ///
   /// Example: use this string as the `callback_id` for a slack interaction, and when
   /// the Temporal API Gateway receives the event it can decode the string and route the event to your workflow.
-  fn encode_signal_no_args_with_version(
+  pub fn encode_signal_no_args_with_version(
     encoder_version: Encoder,
     signal: TemporalSignalWithoutInput,
   ) -> String {
@@ -62,7 +60,7 @@ pub mod encoder {
   /// Encode a TemporalInteraction struct provided as a JSON string.
   ///
   /// panics if JSON structure is not correct.
-  fn encode_default_from_json_string(json_string: String) -> napi::Result<String> {
+  pub fn encode_default_from_json_string(json_string: String) -> napi::Result<String> {
     Encoder::encode_default_from_json_string(&json_string).map_err(|err| {
       napi::Error::new(
         Status::GenericFailure,
@@ -73,7 +71,7 @@ pub mod encoder {
 
   #[napi]
   /// Decode an encoded string into a JSON string representing a TemporalInteraction struct.
-  fn decode_to_json_string(encoded_string: String) -> napi::Result<String> {
+  pub fn decode_to_json_string(encoded_string: String) -> napi::Result<String> {
     Encoder::decode_to_json_string(&encoded_string).map_err(|err| {
       napi::Error::new(
         Status::GenericFailure,

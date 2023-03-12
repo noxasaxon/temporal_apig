@@ -1,7 +1,8 @@
-
 [workspace]
 members = [
     "crates/*"
 ]
 
-default-members = ["crates/apig_server"]
+
+[workspace.package]
+version = "0.0.1"
