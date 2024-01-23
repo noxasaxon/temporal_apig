@@ -1,4 +1,4 @@
-FROM rust:1.65.0-buster as base
+FROM docker/saxorg/base-rust:release-1.65.0-buster-1 AS base
 
 # install protoc for the temporal rust sdk's protobuffers
 RUN apt-get update \
@@ -17,11 +17,14 @@ ARG CARGO_INCREMENTAL=0
 
 COPY . .
 
-RUN USER=root cargo build --manifest-path crates/apig_server/Cargo.toml --release
+# RUN USER=root cargo build --locked --bin apig_server --release
+RUN USER=root cargo update -p time@0.3.28 --precise 0.3.23
+RUN USER=root cargo build --bin apig_server --release
 
 
 # From this line onwards, we're in a new image, which will be the image used in production
-FROM debian:buster-slim
+FROM docker/saxorg/base-debian
+
 
 # Create a group and user
 RUN addgroup appgroup && adduser appuser && adduser appuser appgroup
@@ -39,9 +42,6 @@ USER appuser
 # Set the locale
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
-
-HEALTHCHECK --interval=10s --timeout=3s --start-period=30s \
-    CMD echo 
 
 EXPOSE 3000
 

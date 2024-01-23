@@ -1,16 +1,54 @@
 mod config;
-mod routes;
 mod slack;
 mod versions;
 
-use crate::{config::init_config_from_env_and_file, routes::create_router};
+use crate::config::{init_config_from_env_and_file, Environments};
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
+    routing::{get, post},
+    Json, Router,
 };
+use slack::axum_apig_handler_slack_interactions_api;
 use std::net::SocketAddr;
-use temporal_sdk_helpers::TEMPORAL_HOST_PORT_PAIR;
+use temporal_sdk_helpers::{
+    execute_interaction, Encoder, TemporalInteraction, TEMPORAL_HOST_PORT_PAIR,
+};
+use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use versions::ApiVersion;
+
+fn create_router(environment: Environments) -> Router {
+    // keep slack routes separate so we can add Slack Verification layer, shared client, etc
+    // /api/:version/slack
+    let slack_router = Router::new()
+        .route(
+            "/interaction",
+            post(axum_apig_handler_slack_interactions_api),
+        )
+        .layer(TraceLayer::new_for_http());
+
+    // /api/:version
+    let versioned_api_router = Router::new()
+        .route("/", get(version_confidence_check))
+        .nest("/slack", slack_router);
+
+    // /api/:version/temporal
+    let temporal_router = Router::new()
+        .route("/encode", post(temporal_encoder))
+        .route("/decode", post(temporal_decoder));
+
+    // disable non-slack event processing routes in prod/stage until api auth is set up
+    let temporal_router = match environment {
+        Environments::stage | Environments::prod => temporal_router,
+        _ => temporal_router.route("/", post(temporal_interaction_handler)),
+    }
+    .layer(TraceLayer::new_for_http());
+
+    let versioned_api_router = versioned_api_router.nest("/temporal", temporal_router);
+
+    Router::new().nest("/api/:version", versioned_api_router)
+}
 
 #[tokio::main]
 async fn main() {
@@ -25,7 +63,7 @@ async fn main() {
     init_tracing();
 
     // build our application with versioned routes
-    let app = create_router();
+    let app = create_router(config.environment);
     // run it
     let addr = SocketAddr::from((
         [0, 0, 0, 0],
@@ -39,6 +77,57 @@ async fn main() {
     {
         tracing::error!("server error: {}", err);
         eprintln!("server error: {}", err);
+    }
+}
+
+// Route Handlers: ////////////////////////////////////////////////////////////
+
+async fn version_confidence_check(api_version: ApiVersion) -> String {
+    let message = format!("received request with version {:?}", api_version);
+    println!("{}", &message);
+    message
+}
+
+async fn temporal_encoder(
+    api_version: ApiVersion,
+    Json(payload): Json<TemporalInteraction>,
+) -> Result<impl IntoResponse, AppError> {
+    match api_version {
+        ApiVersion::V1 => {
+            let encoded_string = Encoder::default().encode(payload);
+            Ok((StatusCode::CREATED, encoded_string))
+        }
+    }
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct TemporalDecoderInput {
+    encoded: String,
+}
+
+async fn temporal_decoder(
+    api_version: ApiVersion,
+    Json(payload): Json<TemporalDecoderInput>,
+) -> Result<impl IntoResponse, AppError> {
+    match api_version {
+        ApiVersion::V1 => {
+            let temporal_interaction = Encoder::decode(&payload.encoded)?;
+            let as_string = serde_json::to_string(&temporal_interaction)?;
+
+            Ok((StatusCode::CREATED, as_string))
+        }
+    }
+}
+
+async fn temporal_interaction_handler(
+    api_version: ApiVersion,
+    Json(payload): Json<TemporalInteraction>,
+) -> Result<impl IntoResponse, AppError> {
+    match api_version {
+        ApiVersion::V1 => {
+            let temporal_response = execute_interaction(payload).await?;
+            Ok((StatusCode::CREATED, Json(temporal_response)))
+        }
     }
 }
 
@@ -88,18 +177,23 @@ mod tests {
         body::{Body, Bytes},
         http::{self, Request, StatusCode},
     };
-    use hyper::header::AUTHORIZATION;
     use mime;
     use serde_json::json;
-    use temporal_sdk_helpers::TemporalInteraction;
     use tower::ServiceExt; // for `oneshot` and `ready`
 
     async fn oneshot(
-        request: axum::http::request::Builder,
+        method: &str,
+        uri: &str,
         body: Body,
         assert_statuscode: StatusCode,
+        mime_type: mime::Mime,
     ) -> Bytes {
-        let app = create_router();
+        let app = create_router(Environments::local).into_service();
+
+        let request = Request::builder()
+            .uri(uri)
+            .method(method)
+            .header(http::header::CONTENT_TYPE, mime_type.as_ref());
 
         // `Router` implements `tower::Service<Request<Body>>` so we can
         // call it like any tower service, no need to run an HTTP server.
@@ -121,12 +215,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_versioning_exists() {
-        let request = Request::builder()
-            .uri("/api/v1")
-            .method("GET")
-            .header(http::header::CONTENT_TYPE, mime::TEXT_PLAIN.as_ref());
-
-        let body = oneshot(request, Body::empty(), StatusCode::OK).await;
+        let body = oneshot(
+            "GET",
+            "/api/v1",
+            Body::empty(),
+            StatusCode::OK,
+            mime::TEXT_PLAIN,
+        )
+        .await;
         assert_eq!(
             &String::from_utf8(body.to_vec()).unwrap(),
             "received request with version V1"
@@ -135,41 +231,41 @@ mod tests {
 
     #[tokio::test]
     async fn test_invalid_version() {
-        let request = Request::builder()
-            .uri("/api/not-a-version")
-            .method("GET")
-            .header(http::header::CONTENT_TYPE, mime::TEXT_PLAIN.as_ref());
-
-        let body = oneshot(request, Body::empty(), StatusCode::NOT_FOUND).await;
+        let body = oneshot(
+            "GET",
+            "/api/not-a-version",
+            Body::empty(),
+            StatusCode::NOT_FOUND,
+            mime::TEXT_PLAIN,
+        )
+        .await;
         assert_eq!(&body[..], versions::UNSUPPORTED_API_VERSION_MSG.as_bytes())
     }
 
     #[tokio::test]
     async fn test_route_not_found_404() {
-        let request = Request::builder()
-            .uri("/does-not-exist")
-            .method("GET")
-            .header(http::header::CONTENT_TYPE, mime::TEXT_PLAIN.as_ref());
-
-        let body = oneshot(request, Body::empty(), StatusCode::NOT_FOUND).await;
+        let body = oneshot(
+            "GET",
+            "/does-not-exist",
+            Body::empty(),
+            StatusCode::NOT_FOUND,
+            mime::TEXT_PLAIN,
+        )
+        .await;
         assert!(body.is_empty());
     }
 
     #[tokio::test]
     async fn test_wrong_structure_sent_to_temporal_route() {
-        let request = Request::builder()
-            .uri("/api/v1/temporal/interact")
-            .method("POST")
-            .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
-            .header(AUTHORIZATION, &format!("Bearer {}", "passwordlol"));
-
         let body = oneshot(
-            request,
+            "POST",
+            "/api/v1/temporal",
             Body::from(
                 serde_json::to_vec(&json!({"not the right format" : "for temporal route"}))
                     .unwrap(),
             ),
             StatusCode::UNPROCESSABLE_ENTITY,
+            mime::APPLICATION_JSON,
         )
         .await;
 
@@ -179,11 +275,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_encode_endpoint_v1_signal() {
-        let request = Request::builder()
-            .uri("/api/v1/temporal/encode")
-            .method("POST")
-            .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref());
-
         let signal_temporal_json = json!({
             "type" : "Signal",
             "namespace" : "my-namespace",
@@ -194,56 +285,14 @@ mod tests {
         });
 
         let body = oneshot(
-            request,
+            "POST",
+            "/api/v1/temporal/encode",
             Body::from(serde_json::to_vec(&signal_temporal_json).unwrap()),
             StatusCode::CREATED,
+            mime::APPLICATION_JSON,
         )
         .await;
 
         assert_eq!("A~E:Signal,W:some-workflow-id,N:my-namespace,T:my-taskqueue,R:some-run-id,S:my_signal_name", body);
-    }
-
-    #[tokio::test]
-    async fn test_encode_and_decode_endpoints_v1_signal() {
-        let signal_temporal_json = json!({
-            "type" : "Signal",
-            "namespace" : "my-namespace",
-            "task_queue": "my-taskqueue",
-            "run_id": "some-run-id",
-            "workflow_id":"some-workflow-id",
-            "signal_name": "my_signal_name"
-        });
-
-        let request = Request::builder()
-            .uri("/api/v1/temporal/encode")
-            .method("POST")
-            .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref());
-
-        let body = oneshot(
-            request,
-            Body::from(serde_json::to_vec(&signal_temporal_json).unwrap()),
-            StatusCode::CREATED,
-        )
-        .await;
-
-        let encoded_string_result = "A~E:Signal,W:some-workflow-id,N:my-namespace,T:my-taskqueue,R:some-run-id,S:my_signal_name";
-        assert_eq!(encoded_string_result, body);
-
-        let request = Request::builder()
-            .uri("/api/v1/temporal/decode")
-            .method("POST")
-            .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref());
-
-        let body = oneshot(
-            request,
-            Body::from(serde_json::to_vec(&json!({ "encoded": encoded_string_result })).unwrap()),
-            StatusCode::CREATED,
-        )
-        .await;
-
-        assert_eq!(
-            serde_json::from_value::<TemporalInteraction>(signal_temporal_json).unwrap(),
-            serde_json::from_slice::<TemporalInteraction>(&body[..]).unwrap()
-        );
     }
 }

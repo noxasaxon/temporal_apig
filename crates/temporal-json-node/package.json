@@ -1,6 +1,6 @@
 {
   "name": "@saxorg/temporal_json",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "main": "index.js",
   "types": "index.d.ts",
   "napi": {
@@ -16,7 +16,7 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@napi-rs/cli": "^2.14.8",
+    "@napi-rs/cli": "^2.14.6",
     "ava": "^4.3.3"
   },
   "ava": {
@@ -30,8 +30,7 @@
     "artifacts": "napi artifacts",
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform",
-    "prepublishOnly": "napi prepublish -t npm",
-    "pretest": "napi build --platform",
+    "unsafe-publish": "napi prepublish -t npm",
     "test": "ava",
     "version": "napi version"
   },

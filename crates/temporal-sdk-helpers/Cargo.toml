@@ -6,9 +6,9 @@ rust-version = "1.63"
 
 [dependencies]
 anyhow = {version = "1.0", features = ["backtrace"]}
-temporal-client = { git = "https://github.com/temporalio/sdk-core", rev = "8b50b7c" }
-temporal-sdk = { git = "https://github.com/temporalio/sdk-core", rev = "8b50b7c" }
-temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core", rev = "8b50b7c" }
+temporal-client = { git = "https://github.com/temporalio/sdk-core", rev = "3d080cd" }
+temporal-sdk = { git = "https://github.com/temporalio/sdk-core", rev = "3d080cd" }
+temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core", rev = "3d080cd" }
 url = "2.3.1"
 uuid = "1.1.2"
 

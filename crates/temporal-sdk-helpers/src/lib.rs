@@ -76,7 +76,7 @@ pub async fn signal_temporal(
             input,
             identity: signal_info
                 .identity
-                .unwrap_or_else(|| "TemporalAPIG".into()),
+                .unwrap_or_else(|| "SecEngTemporalAPIG".into()),
             request_id: signal_info
                 .request_id
                 .unwrap_or_else(|| Uuid::new_v4().to_string()),

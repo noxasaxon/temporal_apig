@@ -209,4 +209,3 @@ Cargo.lock
 !.yarn/versions
 
 *.node
-secrets

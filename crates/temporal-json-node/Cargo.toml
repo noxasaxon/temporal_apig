@@ -8,17 +8,12 @@ crate-type = ["cdylib"]
 
 [dependencies]
 # Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
-napi = { version = "2.11.2", default-features = false, features = ["napi4"] }
-napi-derive = "2.11.1"
+napi = { version = "2.10.14", default-features = false, features = ["napi4"] }
+napi-derive = "2.10.1"
 temporal-json = {path = "../temporal-json", features = ["js"]}
+
 anyhow = {version = "1.0"}
 
 [build-dependencies]
 napi-build = "2.0.1"
 
-[features]
-test-utils = []
-
-[dev-dependencies]
-## fixes linker errors when running cargo test: https://github.com/napi-rs/napi-rs/issues/1032
-napi-derive = {version = "2.11.1", features = ["noop"]}

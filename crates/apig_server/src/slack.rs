@@ -33,7 +33,8 @@ pub async fn handle_slack_interaction(
         let temporal_info = temporal_info_no_inputs.add_data_args(Some(vec![input_data]));
 
         let temporal_response = execute_interaction(temporal_info).await?;
-        Ok(Json(temporal_response))
+
+        Ok(())
     } else {
         error!("Interaction event `payload` key is not valid json or does not deserialize to existing struct");
         error!("{:?}", &wrapper);
@@ -58,9 +59,9 @@ fn get_callback_id_from_slack_interaction_event(
             .callback_id
             .expect("callback id not provided in dialog")
             .to_string(),
-        SlackInteractionEvent::MessageAction(msg_action_event) => {
-            msg_action_event.callback_id.to_string()
-        }
+        SlackInteractionEvent::MessageAction(msg_action_event) => msg_action_event
+            .callback_id
+            .to_string(),
         SlackInteractionEvent::Shortcut(_shortcut_event) => todo!(),
         SlackInteractionEvent::ViewSubmission(view_submission_event) => {
             let callback_id_option = match view_submission_event.view.view {

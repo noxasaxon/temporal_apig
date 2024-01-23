@@ -4,7 +4,7 @@ use std::{collections::HashMap, hash::Hash, str::FromStr};
 use strum::{Display, EnumDiscriminants, EnumIter, EnumString, IntoEnumIterator};
 
 #[cfg(feature = "js")]
-use napi_derive::napi;
+use napi::bindgen_prelude::*;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, EnumDiscriminants, Clone)]
 #[serde(tag = "type")]
@@ -140,9 +140,8 @@ pub const ENCODER_SECTION_DELIMITER: &str = "~";
 pub const ENCODER_HELP_MSG: &str =
     "Encoder string format: version~temporal_key:temporal_value~user_data";
 
-#[derive(EnumIter, EnumString, Display, PartialEq, Eq, Hash, Debug, Clone)]
-#[cfg_attr(feature = "js", napi)]
-#[cfg_attr(feature = "python", pyo3::pyclass)]
+#[derive(EnumIter, EnumString, Display, PartialEq, Eq, Hash, Debug)]
+#[cfg_attr(feature = "js", napi_derive::napi)]
 pub enum Encoder {
     A,
 }
